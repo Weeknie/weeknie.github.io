@@ -1,9 +1,18 @@
 body, html {
   height: 100%;
+  font-family: arial;
 }
 
 #flex-container {
 	display: flex;
-	flex-direction: row;
+	align-items: center;
+	justify-content: center;
 	heigh: 100%;
+}
+
+#flex-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center
 }

@@ -166,6 +166,11 @@ function updatePhysics() {
   var deltaTime = time - previousFrameTime;
   previousFrameTime = time;
 
+  if (deltaTime > 20) {
+    // Drop frame
+    return;
+  }
+
   if (stepAnimation) {
     stepAnimation = false;
   } else if (!runAnimation) {

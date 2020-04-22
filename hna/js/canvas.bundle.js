@@ -101,7 +101,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-console.log('Version 0.2');
+console.log('Version 0.3');
 var stepAnimation = false;
 var runAnimation = _constants__WEBPACK_IMPORTED_MODULE_0__["default"].initialRunAnimation;
 var canvas = document.querySelector('canvas');
@@ -146,31 +146,15 @@ function init() {
   });
 }
 
-function animate(time) {
-  requestAnimationFrame(animate);
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  circles.forEach(function (circle) {
-    circle.draw();
-  });
-}
-
 var previousFrameTime = 0;
 
-function updatePhysics() {
-  setTimeout(updatePhysics, 0);
-  var time = new Date().getTime();
-
-  if (previousFrameTime == 0) {
-    previousFrameTime = time;
-    return;
-  }
-
+function animate(time) {
+  requestAnimationFrame(animate);
   var deltaTime = time - previousFrameTime;
   previousFrameTime = time;
 
-  if (deltaTime > 20) {
-    // Drop frame
-    return;
+  if (deltaTime > 120) {
+    deltaTime = 10;
   }
 
   if (stepAnimation) {
@@ -179,9 +163,11 @@ function updatePhysics() {
     return;
   }
 
+  context.clearRect(0, 0, canvas.width, canvas.height);
   circles.forEach(function (circle) {
     circle.calculateNewPosition(deltaTime, circles);
     circle.update();
+    circle.draw();
   });
 
   if (circles.every(function (circle) {
@@ -194,7 +180,6 @@ function updatePhysics() {
 
 init();
 requestAnimationFrame(animate);
-updatePhysics();
 
 /***/ }),
 

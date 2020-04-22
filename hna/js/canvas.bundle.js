@@ -157,6 +157,7 @@ function animate(time) {
 var previousFrameTime = 0;
 
 function updatePhysics() {
+  setTimeout(updatePhysics, 0);
   var time = new Date().getTime();
 
   if (previousFrameTime == 0) {
@@ -191,9 +192,9 @@ function updatePhysics() {
   }
 }
 
-setInterval(updatePhysics, 10);
 init();
 requestAnimationFrame(animate);
+updatePhysics();
 
 /***/ }),
 

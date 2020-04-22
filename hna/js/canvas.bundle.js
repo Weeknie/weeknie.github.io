@@ -145,17 +145,26 @@ function init() {
   });
 }
 
-var previousFrameTime = 0;
-
 function animate(time) {
   requestAnimationFrame(animate);
-  var deltaTime = time - previousFrameTime;
-  previousFrameTime = time;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  circles.forEach(function (circle) {
+    circle.draw();
+  });
+}
 
-  if (deltaTime > 120) {
-    // Drop frame
+var previousFrameTime = 0;
+
+function updatePhysics() {
+  var time = new Date().getTime();
+
+  if (previousFrameTime == 0) {
+    previousFrameTime = time;
     return;
   }
+
+  var deltaTime = time - previousFrameTime;
+  previousFrameTime = time;
 
   if (stepAnimation) {
     stepAnimation = false;
@@ -163,11 +172,9 @@ function animate(time) {
     return;
   }
 
-  context.clearRect(0, 0, canvas.width, canvas.height);
   circles.forEach(function (circle) {
     circle.calculateNewPosition(deltaTime, circles);
     circle.update();
-    circle.draw();
   });
 
   if (circles.every(function (circle) {
@@ -178,6 +185,7 @@ function animate(time) {
   }
 }
 
+setInterval(updatePhysics, 10);
 init();
 requestAnimationFrame(animate);
 

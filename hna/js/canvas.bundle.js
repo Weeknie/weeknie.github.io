@@ -101,7 +101,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-console.log('Version 0.3');
+console.log('Version 0.4');
 var stepAnimation = false;
 var runAnimation = _constants__WEBPACK_IMPORTED_MODULE_0__["default"].initialRunAnimation;
 var canvas = document.querySelector('canvas');
@@ -153,8 +153,8 @@ function animate(time) {
   var deltaTime = time - previousFrameTime;
   previousFrameTime = time;
 
-  if (deltaTime > 120) {
-    deltaTime = 10;
+  if (deltaTime > 15) {
+    deltaTime = 15;
   }
 
   if (stepAnimation) {

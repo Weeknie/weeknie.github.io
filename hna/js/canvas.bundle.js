@@ -101,7 +101,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-console.log('Version 0.1');
+console.log('Version 0.2');
 var stepAnimation = false;
 var runAnimation = _constants__WEBPACK_IMPORTED_MODULE_0__["default"].initialRunAnimation;
 var canvas = document.querySelector('canvas');

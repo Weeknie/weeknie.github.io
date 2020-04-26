@@ -101,46 +101,109 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-console.log('Version 0.4');
+console.log("Version 0.4");
 var stepAnimation = false;
 var runAnimation = _constants__WEBPACK_IMPORTED_MODULE_0__["default"].initialRunAnimation;
-var canvas = document.querySelector('canvas');
-var context = canvas.getContext('2d');
+var restartSimulationHandle;
+var restartingSimulation = false;
+var canvas = document.querySelector("canvas");
+var context = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-addEventListener('resize', function () {
+addEventListener("resize", function () {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   init();
 });
-addEventListener('keypress', function (event) {
+addEventListener("keypress", function (event) {
   switch (event.code) {
-    case 'Space':
+    case "Space":
       stepAnimation = true;
       break;
 
-    case 'KeyP':
+    case "KeyP":
       runAnimation = !runAnimation;
       break;
 
-    case 'KeyR':
+    case "KeyR":
       init();
+      break;
+
+    case "Equal":
+      _constants__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitude += _constants__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitudeChangePerPress;
+      console.log(_constants__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitude);
+      break;
+
+    case "Minus":
+      if (_constants__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitude > 0) {
+        _constants__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitude -= _constants__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitudeChangePerPress;
+      }
+
+      console.log(_constants__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitude);
+      break;
+
+    default:
+      console.log(event.code);
       break;
   }
 });
 var circles;
 
 function init() {
+  restartingSimulation = false;
+  clearTimeout(restartSimulationHandle);
   context.clearRect(0, 0, canvas.width, canvas.height);
-  var k = 30;
-  var dimensions = 2;
-  var myPoisson = new _utils_poissonDisc__WEBPACK_IMPORTED_MODULE_2__["default"](canvas.width - _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding * 2, canvas.height - _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding * 2, _constants__WEBPACK_IMPORTED_MODULE_0__["default"].placementRadius, k, dimensions);
-  myPoisson.run();
-  circles = []; // circles.push(new Circle(context, canvas.width / 2, canvas.height / 2, canvas.width, canvas.height))
+  circles = [];
 
-  circles = myPoisson.points.map(function (point) {
-    return new _circle__WEBPACK_IMPORTED_MODULE_1__["default"](context, point.px + _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding, point.py + _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding, canvas.width, canvas.height);
-  });
+  switch (_constants__WEBPACK_IMPORTED_MODULE_0__["default"].spawnMode) {
+    case "cluster":
+      {
+        console.log("Spawning cluster");
+        var k = 30;
+        var dimensions = 2;
+        var myPoisson = new _utils_poissonDisc__WEBPACK_IMPORTED_MODULE_2__["default"](canvas.width - _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding * 2, canvas.height - _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding * 2, _constants__WEBPACK_IMPORTED_MODULE_0__["default"].placementRadius, k, dimensions);
+        myPoisson.run();
+        circles = myPoisson.points.map(function (point) {
+          var hue = Math.round(Math.random() * 360);
+          return new _circle__WEBPACK_IMPORTED_MODULE_1__["default"](context, hue, point.px + _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding, point.py + _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding, canvas.width, canvas.height);
+        });
+      }
+      break;
+
+    case "groups":
+      {
+        console.log("Spawning groups");
+        var _k = 30;
+        var _dimensions = 2;
+
+        var _myPoisson = new _utils_poissonDisc__WEBPACK_IMPORTED_MODULE_2__["default"](canvas.width - _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding * 2, canvas.height - _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding * 2, _constants__WEBPACK_IMPORTED_MODULE_0__["default"].placementRadius, _k, _dimensions);
+
+        _myPoisson.run();
+
+        circles = _myPoisson.points.map(function (point) {
+          var groupNumber = Math.floor(Math.random() * 3);
+          var hue = Math.floor(Math.random() * 60) + groupNumber * 120;
+          return new _circle__WEBPACK_IMPORTED_MODULE_1__["default"](context, hue, point.px + _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding, point.py + _constants__WEBPACK_IMPORTED_MODULE_0__["default"].padding, canvas.width, canvas.height);
+        });
+      }
+      break;
+
+    case "single":
+      {
+        console.log("Spawning single");
+        circles.push(new _circle__WEBPACK_IMPORTED_MODULE_1__["default"](context, Math.round(Math.random() * 360), canvas.width / 2, canvas.height / 2, canvas.width, canvas.height));
+      }
+      break;
+
+    case "double":
+      {
+        console.log("Spawning double");
+        circles.push(new _circle__WEBPACK_IMPORTED_MODULE_1__["default"](context, Math.round(Math.random() * 360), canvas.width / 3, canvas.height / 2, canvas.width, canvas.height));
+        circles.push(new _circle__WEBPACK_IMPORTED_MODULE_1__["default"](context, Math.round(Math.random() * 360), canvas.width - canvas.width / 3, canvas.height / 2, canvas.width, canvas.height));
+      }
+      break;
+  }
+
   circles.forEach(function (circle) {
     circle.draw();
   });
@@ -156,6 +219,9 @@ function animate(time) {
   if (deltaTime > 15) {
     deltaTime = 15;
   }
+
+  deltaTime /= 1000;
+  deltaTime *= _constants__WEBPACK_IMPORTED_MODULE_0__["default"].simulationSpeed;
 
   if (stepAnimation) {
     stepAnimation = false;
@@ -174,8 +240,22 @@ function animate(time) {
     return circle.isInert();
   })) {
     // Restart the simulation
-    init();
+    restartSimulation();
   }
+}
+
+function restartSimulation() {
+  if (_constants__WEBPACK_IMPORTED_MODULE_0__["default"].restartMode == "off") {
+    return;
+  }
+
+  if (restartingSimulation) {
+    return;
+  }
+
+  console.log("Restarting in 1 second");
+  restartingSimulation = true;
+  restartSimulationHandle = setTimeout(init, 1 * 1000);
 }
 
 init();
@@ -194,6 +274,7 @@ requestAnimationFrame(animate);
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Circle; });
 /* harmony import */ var _constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./constants.js */ "./src/js/constants.js");
+/* harmony import */ var _utils_randomScale_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils/randomScale.js */ "./src/js/utils/randomScale.js");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -202,8 +283,9 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
+
 var Circle = /*#__PURE__*/function () {
-  function Circle(context, x, y, canvasWidth, canvasHeight) {
+  function Circle(context, hue, x, y, canvasWidth, canvasHeight) {
     _classCallCheck(this, Circle);
 
     this.context = context;
@@ -212,11 +294,11 @@ var Circle = /*#__PURE__*/function () {
     this.radius = _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].circleRadius;
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
-    this.hue = Math.round(Math.random() * 360);
+    this.hue = hue;
     this.color = "hsl(" + this.hue + ", 100%, 50%)";
     this.speed = {
-      x: (Math.random() * 2 - 1) * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].initialSpeed,
-      y: (Math.random() * 2 - 1) * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].initialSpeed
+      x: 0,
+      y: 0
     };
     this.deleted = false;
   }
@@ -249,10 +331,12 @@ var Circle = /*#__PURE__*/function () {
         y: 0
       });
       var accelerationFromBorder = this.calculateRepulsionFromBorder();
-      this.speed.x += accelerationFromCircles.x + accelerationFromBorder.x - this.speed.x * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].friction;
-      this.speed.y += accelerationFromCircles.y + accelerationFromBorder.y - this.speed.y * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].friction;
-      this.newX = this.x + this.speed.x * deltaTime / 1000;
-      this.newY = this.y + this.speed.y * deltaTime / 1000;
+      var brownianX = _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitude * Object(_utils_randomScale_js__WEBPACK_IMPORTED_MODULE_1__["default"])();
+      var brownianY = _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].brownianAmplitude * Object(_utils_randomScale_js__WEBPACK_IMPORTED_MODULE_1__["default"])();
+      this.speed.x += accelerationFromCircles.x + accelerationFromBorder.x + brownianX - this.speed.x * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].friction;
+      this.speed.y += accelerationFromCircles.y + accelerationFromBorder.y + brownianY - this.speed.y * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].friction;
+      this.newX = this.x + this.speed.x * deltaTime;
+      this.newY = this.y + this.speed.y * deltaTime;
     }
   }, {
     key: "update",
@@ -327,9 +411,9 @@ var Circle = /*#__PURE__*/function () {
     value: function calculateAttractionToCircle(circle) {
       var distance = this.calculateDistanceToCircle(circle);
       var deltaHue = Math.min(Math.abs(this.hue - circle.hue), 360 - Math.abs(this.hue - circle.hue));
-      var deltaHueFactor = 1 - deltaHue / 180;
-      var attractionFactor = deltaHueFactor;
-      return (distance - _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].attractionOffset) / Math.exp(distance / _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].attractionScale) * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].attractionAmplitude * attractionFactor;
+      var deltaHueFactor = 1 - deltaHue / 180 * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].groupingIntensity;
+      var attractionFactor = Math.exp(-(1 - deltaHueFactor) * (1 - deltaHueFactor));
+      return (distance - _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].attractionXOffset) / Math.exp(distance / _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].attractionScale) * _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].attractionAmplitude * attractionFactor + _constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].attractionYOffset;
     }
   }]);
 
@@ -350,18 +434,24 @@ var Circle = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
+  spawnMode: "cluster",
+  restartMode: "on",
   initialRunAnimation: true,
-  circleRadius: 10,
-  placementRadius: 40,
+  simulationSpeed: 1,
+  circleRadius: 5,
+  placementRadius: 35,
   padding: 200,
-  initialSpeed: 0,
+  inertThreshold: 5,
   repulsionAmplitude: 1000,
   repulsionScale: 20,
   attractionScale: 90,
-  attractionAmplitude: 0.15,
-  attractionOffset: 20,
-  friction: 0.22,
-  inertThreshold: 1
+  attractionAmplitude: 1,
+  attractionXOffset: 20,
+  attractionYOffset: -0.01,
+  friction: 0.6,
+  brownianAmplitude: 0,
+  brownianAmplitudeChangePerPress: 50,
+  groupingIntensity: 5
 });
 
 /***/ }),
@@ -593,6 +683,22 @@ var PoissonDisc = /*#__PURE__*/function () {
 }();
 
 
+
+/***/ }),
+
+/***/ "./src/js/utils/randomScale.js":
+/*!*************************************!*\
+  !*** ./src/js/utils/randomScale.js ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return randomScale; });
+function randomScale() {
+  return Math.random() * 2 - 1;
+}
 
 /***/ })
 

@@ -1,13 +1,14 @@
 body, html {
   height: 100%;
   font-family: arial;
+  overflow: hidden;
 }
 
 #flex-container {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	heigh: 100%;
+	height: 100%;
 }
 
 #flex-item {
@@ -15,4 +16,15 @@ body, html {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center
+}
+
+#logo {
+	position: absolute;
+	bottom: 20px;
+	right: 20px;
+}
+
+#logo img {
+	height: 300px;
+	transform: rotate(30deg);
 }
